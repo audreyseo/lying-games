@@ -1,10 +1,9 @@
 package org.audreyseo.lying
 package botc.states
 
-import roles.Duration
-
-import org.audreyseo.lying.botc.abilities.Ability
-import org.audreyseo.lying.botc.characters.PlayerCharacter
+import botc.abilities.Ability
+import botc.characters.PlayerCharacter
+import org.audreyseo.lying.base.operations.Duration
 
 sealed abstract class State {
 

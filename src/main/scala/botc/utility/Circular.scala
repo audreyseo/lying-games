@@ -24,4 +24,10 @@ class CircularQueue[A](s: Seq[A]) extends Circular[A] {
     def resetIterator: Iterator[A] = s.iterator
     var iter = resetIterator
   }
+
+  def getSeq: Seq[A] = s
+
+  override def toString: String = {
+    s.toString
+  }
 }

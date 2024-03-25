@@ -1,7 +1,9 @@
 package org.audreyseo.lying
 package botc
 
+import org.audreyseo.lying.base.roles.alignments.HasAlignedWith
+
 trait HasMisregistration {
-  def misregistersAs: Set[BotcAlignment]
-  def canMisregisterAs(alignment: BotcAlignment): Boolean = misregistersAs.contains(alignment)
+  def misregistersAs: Set[HasAlignedWith]
+  def canMisregisterAs(alignment: HasAlignedWith): Boolean = misregistersAs.contains(alignment)
 }

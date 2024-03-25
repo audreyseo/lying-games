@@ -4,6 +4,9 @@ package botc
 import botc.utility.InvalidNumberOfPlayersError
 
 package object characters {
+  def getNumbers(numPlayers: Int): (Int, Int, Int, Int) =
+    (getNumTownsfolk(numPlayers), getNumOutsiders(numPlayers), getNumMinions(numPlayers), getNumDemons(numPlayers))
+
   def getNumTownsfolk(numPlayers: Int): Int =
     numPlayers match {
       case 5 =>

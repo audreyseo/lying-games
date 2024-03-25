@@ -1,21 +1,22 @@
 package org.audreyseo.lying
 package botc
 
-import roles.Player
-
-import org.audreyseo.lying.botc.abilities.Ability
-import org.audreyseo.lying.botc.characters.PlayerCharacter
-import org.audreyseo.lying.botc.states._
-import org.audreyseo.lying.roles.Duration
+import botc.abilities.Ability
+import botc.characters.PlayerCharacter
+import botc.states._
+import org.audreyseo.lying.base.operations.Duration
+import org.audreyseo.lying.base.player.Player
 
 abstract class BotcPlayer(name: String, character: PlayerCharacter) extends Player(name, character) {
   var drunk: Option[Drunkenness] = None
   var poisoned: Option[Poisoned] = None
   var mad: Option[Madness] = None
+  var left: Option[BotcPlayer] = None
+  var right: Option[BotcPlayer] = None
   def getStates: Set[State] = {
     List(drunk, poisoned, mad).foldLeft(Set.empty[State])(
       (s, o) => o match {
-        case Some(opt) => s.union(Set(o))
+        case Some(opt) => s.union(Set(opt))
         case None => s
       })
   }
@@ -53,38 +54,23 @@ abstract class BotcPlayer(name: String, character: PlayerCharacter) extends Play
     this.mad = None
     this
   }
-}
 
-
-class BPlayer(name: String, character: PlayerCharacter) extends BotcPlayer(name, character) {
-  var self_alignment = None
-  var left: Option[BPlayer] = None
-  var right: Option[BPlayer] = None
-  var reminders: List[String] = List()
-
-  def getReminders = reminders
-  def addReminder(s: String): this.type = {
-    reminders = s :: reminders
-    this
-  }
-  def removeReminder(s: String): this.type = {
-    reminders = reminders.filterNot((s1) => s1.equals(s))
-    this
-  }
-
-  def assignLeft(lft: BPlayer): this.type = {
+  def assignLeft(lft: BotcPlayer): this.type = {
     this.left = Some(lft)
     this
   }
-  def assignRight(rght: BPlayer): this.type = {
+  def assignRight(rght: BotcPlayer): this.type = {
     this.right = Some(rght)
     this
   }
 
+  def hasLeft: Boolean = this.left.isDefined
+  def hasRight: Boolean = this.right.isDefined
+
   def get_right = this.right.get
   def get_left = this.left.get
 
-  def getRight(p: BPlayer => Boolean, origin: Option[BPlayer] = None): Option[BPlayer] =
+  def getRight(p: BotcPlayer => Boolean, origin: Option[BotcPlayer] = None): Option[BotcPlayer] =
     if (origin.isDefined && this.equals(origin.get)) {
       None
     } else {
@@ -96,7 +82,7 @@ class BPlayer(name: String, character: PlayerCharacter) extends BotcPlayer(name,
       }
     }
 
-  def getLeft(p: BPlayer => Boolean, origin:Option[BPlayer] = None): Option[BPlayer] =
+  def getLeft(p: BotcPlayer => Boolean, origin:Option[BotcPlayer] = None): Option[BotcPlayer] =
     if (origin.isDefined && this.equals(origin.get)) {
       None
     } else {
@@ -107,5 +93,61 @@ class BPlayer(name: String, character: PlayerCharacter) extends BotcPlayer(name,
         this.get_left.getLeft(p, origin=o)
       }
     }
+  def simpleToString: String = {
+    s"$name[$character]"
+  }
+
+  def hasNightAction(nightNum: Int) =
+    getRole match {
+      case n : NightOrder =>
+        n.getPrecedence(nightNum) > 0
+      case _ => false
+    }
+
+  def getPrecedence(nightNum: Int) =
+    getRole match {
+      case n: NightOrder =>
+        n.getPrecedence(nightNum)
+      case _ => 0
+    }
+
+  def isMinion: Boolean = getRole.isInstanceOf[botc.characters.Minion]
+  def isDemon: Boolean = getRole.isInstanceOf[botc.characters.Demon]
+}
+
+
+class BPlayer(name: String, character: PlayerCharacter) extends BotcPlayer(name, character) {
+  //override var self_alignment = None
+
+  var reminders: List[botc.abilities.Reminder] = List()
+
+  def getReminders = reminders
+  def addReminder(r: botc.abilities.Reminder): this.type = {
+    reminders = r :: reminders
+    this
+  }
+  def removeReminder(r: botc.abilities.Reminder): this.type = {
+    reminders = reminders.filterNot(s1 => s1.equals(r))
+    this
+  }
+
+
+
+  override def toString: String = {
+    if (hasLeft && hasRight) {
+      s"$simpleToString (left: ${get_left.simpleToString}, right: ${get_right.simpleToString})"
+    } else if (hasLeft) {
+      s"$simpleToString (left: ${get_left.simpleToString})"
+    } else if (hasRight) {
+      s"${simpleToString} (right: ${get_right.simpleToString})"
+    } else {
+      simpleToString
+    }
+  }
+
+  override def takeAction[A](targets: A*): this.type = {
+    
+    this
+  }
 
 }
