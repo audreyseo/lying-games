@@ -2,9 +2,8 @@ package org.audreyseo.lying
 package botc.characters
 
 import base.roles.HasModifier
-import botc.{AnyOfModifier, Evil, ModifyOutsiders}
+import botc.{AnyOfModifier, BelievesIsAlignment, Evil, Good, HasMisregistration, ModifyOutsiders, NightOrder}
 import botc.abilities._
-import botc.NightOrder
 
 sealed abstract class Minion(name: String, description: String, first: Int = 0, other: Int = 0) extends EvilCharacter(name, description) with NightOrder {
   setAlignment(Evil())
@@ -47,9 +46,12 @@ case class Goblin() extends Minion("Goblin", "If you publicly claim to be the Go
 case class Godfather() extends Minion("Godfather", "You start knowing which Outsiders are in play. If 1 died today, choose a player tonight: they die. [-1 or +1 Outsider]") with HasReminders.HasDead with HasReminders.HasDiedToday with HasModifier {
   def mod = AnyOfModifier(ModifyOutsiders(-1), ModifyOutsiders(1))
 }
-case class Harpy() extends Minion("Harpy", "Each night, choose 2 players: tomorrow, the 1st player is mad that the 2nd is evil, or both might die.")
-case class Marionette() extends Minion("Marionette", "You think you are a good character, but you are not. The Demon knows who you are. [You neighbor the Demon]", first=12) with HasReminders {
+case class Harpy() extends Minion("Harpy", "Each night, choose 2 players: tomorrow, the 1st player is mad that the 2nd is evil, or both might die.") with HasReminders.HasMad {
+  addReminder(Reminders.Second)
+}
+case class Marionette() extends Minion("Marionette", "You think you are a good character, but you are not. The Demon knows who you are. [You neighbor the Demon]", first=12) with HasReminders with HasModifier {
   addReminder(Reminders.IsTheMarionette().setGlobal(true))
+  def mod = BelievesIsAlignment(Good())
 }
 case class Mastermind() extends Minion("Mastermind", "If the Demon dies by execution (ending the game), play for 1 more day. If a player is then executed, their team loses.")
 case class Mezepheles()
@@ -84,7 +86,9 @@ case class Spy()
   Minion("Spy",
          "Each night, you see the Grimoire. You might register as good & as a Townsfolk or Outsider, even if dead.",
          first=49,
-         other=68)
+         other=68) with HasMisregistration {
+  def misregistersAs = Set(Good(), TownsfolkType(), OutsiderType())
+}
 case class Vizier()
   extends
   Minion("Vizier",

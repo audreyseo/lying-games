@@ -5,7 +5,7 @@ import botc.characters.PlayerCharacter
 
 import scala.collection.mutable
 
-sealed abstract class HatredJinx(c1: PlayerCharacter, c2: PlayerCharacter) extends Jinx(c1, c2){
+sealed abstract class HatredJinx(c1: PlayerCharacter, c2: PlayerCharacter) extends Jinx(c1, c2) {
 }
 
 case class NormalHatred(c1: PlayerCharacter, c2: PlayerCharacter) extends HatredJinx(c1, c2)
@@ -53,9 +53,9 @@ object HatredJinx {
   addHatred(Legion, Preacher())
   addHatred(LilMonsta, Magician())
   addHatred(Riot, Exorcist())
-  addHatred(Riot,FlowerGirl())
+  addHatred(Riot, FlowerGirl())
   addHatred(Riot, Minstrel())
-  addSpecial(AlHadikhia,Mastermind())
+  addSpecial(AlHadikhia, Mastermind())
   addSpecial(OrganGrinder(), Minstrel())
   addSpecial(OrganGrinder(), Preacher())
   addSpecial(Vizier(), Magician())

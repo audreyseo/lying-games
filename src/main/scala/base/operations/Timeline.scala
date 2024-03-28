@@ -48,6 +48,8 @@ trait Timeline extends Time with scala.math.Ordering[Timeline] {
           }
         case o: OnceDuringDay =>
           !o.isUsed
+        case AnyTime =>
+          true
       }
     } else if (isNight && t.isDuringNight) {
       t match {
@@ -55,6 +57,8 @@ trait Timeline extends Time with scala.math.Ordering[Timeline] {
           !notFirst || !isFirst
         case o: OnceAtNight =>
           !o.isUsed
+        case AnyTime =>
+          true
       }
     } else {
       false

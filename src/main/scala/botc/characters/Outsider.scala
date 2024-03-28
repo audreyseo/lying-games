@@ -2,8 +2,9 @@ package org.audreyseo.lying
 package botc.characters
 
 import botc.abilities._
-import botc.{Evil, HasMisregistration}
-import botc.NightOrder
+import botc.{BelievesIsAlignment, Evil, HasMisregistration, NightOrder}
+
+import org.audreyseo.lying.base.roles.HasModifier
 
 sealed abstract class Outsider(name: String, description: String, first: Int = 0, other: Int = 0) extends GoodCharacter(name, description) with NightOrder {
   setRoleType(OutsiderType())
@@ -21,8 +22,9 @@ case class Barber() extends Outsider("Barber", "Each night, choose a player (not
   addReminder(Reminders.HaircutsTonight())
 }
 case class Damsel() extends Outsider("Damsel", "All Minions know you are in play. If a Minion publicly guesses you (once), your team loses.", first=31, other=46) with HasReminders.HasNoAbility
-case class Drunk() extends Outsider("Drunk", "You do not know you are the Drunk. You think you are a Townsfolk character, but you are not.") with HasReminders.HasDrunk {
+case class Drunk() extends Outsider("Drunk", "You do not know you are the Drunk. You think you are a Townsfolk character, but you are not.") with HasReminders.HasDrunk with HasModifier {
   setGlobals(r => r == Reminders.Drunk())
+  def mod = BelievesIsAlignment(TownsfolkType())
 }
 case class Golem() extends Outsider("Golem", "You may only nominate once per game. When you do, if the nominee is not the Demon, they die.") with HasReminders {
   addReminder(Reminders.CannotNominate())

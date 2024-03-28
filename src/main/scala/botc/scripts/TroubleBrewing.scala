@@ -10,7 +10,8 @@ object TroubleBrewing extends NoFabledScript {
   override def scriptName: String = "Trouble Brewing"
 
   override def townsfolkRoles: RoleSet[Townsfolk] =
-    Roles(Washerwoman(),Librarian(), Investigator(), Chef(), Empath(), FortuneTeller(), Undertaker(), Monk(), Ravenkeeper(), Virgin(), Slayer(), Soldier(), Mayor())
+    Roles(Washerwoman(),Librarian(), Investigator(), Chef(), Empath(), FortuneTeller(), Undertaker(), Monk(), Ravenkeeper(), Virgin(), Slayer(), Soldier(), Mayor(),
+          Clockmaker())
 
   override def outsiderRoles: RoleSet[Outsider] =
     Roles(Butler(), Drunk(), Recluse(), Saint())

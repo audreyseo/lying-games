@@ -8,24 +8,25 @@ import base.utility.{RandomIterator, TypeUtils}
 import botc._
 import botc.characters._
 import botc.scripts.{RaceToTheBottom, Script, TroubleBrewing}
-import botc.utility.{CharacterDoesNotExistError, CircularQueue, NotEnoughCharactersForPlayersError, RanOutOfCharactersError}
+import botc.utility.{CharacterDoesNotExistError, CircularQueue, NotEnoughCharactersForPlayersError, PlayerIterator, RanOutOfCharactersError}
 
 import org.audreyseo.lying.base
+import org.audreyseo.lying.botc.abilities.PassiveAbility
 
 import scala.reflect.runtime.universe._
 
 class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameState {
   private var playersNames = p
   override var players: Option[Iterable[Player]] = None
-  
+
   private def playersAsNonCircularIterable: Iterable[BotcPlayer] =
     players match {
       case Some(p) =>
         p match {
-          case value: CircularQueue[BotcPlayer] =>
+          case value: botc.players.Players =>
             value
-              .getSeq
-          case _ => throw new Exception("Grimoire.players initialized to something other than a CircularQueue[BotcPlayer]")
+          case _ => throw new Exception(
+            "Grimoire.players initialized to something other than a CircularQueue[BotcPlayer]")
         }
       case None =>
         throw new Exception("Tried to get players before Grimoire.players has been initialized")
@@ -50,7 +51,10 @@ class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameS
   }
 
   def startedPlaying: Boolean = phase != Phase.NotStarted
+
   def isNight: Boolean = phase.isNight
+
+  def getPhase: Phase.Phase = phase
 
   def nextPhase(): this.type = {
     if (!startedPlaying) {
@@ -84,17 +88,47 @@ class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameS
 
   def isTeensyville: Boolean = gameSize <= 6
 
+  var needToSetUp: Boolean = true
+
+  def setNeedToSetUp(b: Boolean): this.type = {
+    needToSetUp = b
+    this
+  }
+
+  def inPlay(character: botc.characters.Character): Boolean = {
+    this.getPlayersUnwrapped.containsCharacter(character.getName)
+  }
+
+  def getPassiveAbilityCharacters: Option[Iterable[PassiveAbility]] =
+    players match {
+      case Some(ps) =>
+        Some(ps.filter{
+          case p: BotcPlayer =>
+            p.getRole.isInstanceOf[PassiveAbility] && p.isAlive
+        }.map(_.asInstanceOf[BotcPlayer].getRole.asInstanceOf[PassiveAbility]))
+      case None => None
+    }
+
+
   def nightIterator: Iterator[BotcPlayer] = {
     if (!isNight) {
       throw Grimoire.PlayException("Cannot call nightIterator outside of night phase")
     }
-    val playersInner = players.asInstanceOf[CircularQueue[BotcPlayer]].iterator.iter
+    if (players.isEmpty) {
+      throw Grimoire.PlayException("Players not yet initialized")
+    }
+    getPassiveAbilityCharacters match {
+      case Some(ps) =>
+        ps.foreach(_.makeCompliant(this))
+      case None =>
+    }
+    val playersInner = players.get.asInstanceOf[botc.players.Players].iterator
     val playersList = playersInner.toList
     val filtered = playersList.filter(_.hasNightAction(nightNum)).sortBy(_.getPrecedence(nightNum))
-    if (isFirstNight && !isTeensyville) {
+    if (needToSetUp && !isTeensyville) {
       // Add minion and demon info for non-teensyville games
       (playersList.filter(_.isMinion)
-                 .sortBy(_.getName) ++
+                  .sortBy(_.getName) ++
         playersList.filter(_.isDemon).sortBy(_.getName) ++
         filtered).iterator
     } else {
@@ -103,7 +137,20 @@ class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameS
 
   }
 
+  def getPlayersCircle: Option[PlayerIterator] =
+    getPlayers match {
+      case Some(p) =>
+        p match {
+          case players: botc.players.Players =>
+            Some(players.circleIterator)
+          case _ => None
+        }
+      case None => None
+    }
+
   def getPlayers = players
+
+  def getPlayersUnwrapped: botc.players.Players = players.get.asInstanceOf[botc.players.Players]
 
   def getScript = script
 
@@ -154,7 +201,7 @@ class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameS
       .size) {
       val actual = calculateActual
       val (town, outsiders, minions, demons) = getNumbers
-      actual.map{
+      actual.map {
         case (t, o, m, d) =>
           (t - town, o - outsiders, m - minions, d - demons)
       }
@@ -199,27 +246,30 @@ class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameS
                       .next())
       }
 
+    val circular = new CircularQueue(playersList)
 
-    players = Some(new CircularQueue(playersList))
-    val iter = players.get.iterator
+
+    val iter = circular.iterator
     val first = iter.next()
-    var old = first.asInstanceOf[BotcPlayer]
-    var nxt = iter.next().asInstanceOf[BotcPlayer]
+    var old = first
+    var nxt = iter.next()
     val oldNxt = nxt
     old.assignRight(nxt)
     nxt.assignLeft(old)
     old = nxt
-    nxt = iter.next().asInstanceOf[BotcPlayer]
+    nxt = iter.next()
+
     old.assignRight(nxt)
     nxt.assignLeft(old)
     old = nxt
-    nxt = iter.next().asInstanceOf[BotcPlayer]
-    while (iter.hasNext && !old.equals(oldNxt)) {
+    nxt = iter.next()
+    while (iter.hasNext && !nxt.equals(oldNxt)) {
       old.assignRight(nxt)
       nxt.assignLeft(old)
       old = nxt
-      nxt = iter.next().asInstanceOf[BotcPlayer]
+      nxt = iter.next()
     }
+    players = Some(new botc.players.Players(playersList))
     this
   }
 
@@ -237,7 +287,7 @@ class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameS
     //if (classTag[A].runtimeClass.isInstanceOf[]
   }
 
-  override def lost[A <: RoleType: TypeTag]: Boolean =
+  override def lost[A <: RoleType : TypeTag]: Boolean =
     if (base
       .utility
       .TypeUtils.isSubtype[A, EvilCharacterType] || base
@@ -255,7 +305,7 @@ object Grimoire {
 
   import Setup._
 
-  def testA[A <: RoleType : TypeTag] : Boolean = {
+  def testA[A <: RoleType : TypeTag]: Boolean = {
     base
       .utility
       .TypeUtils.isSubtype[A, EvilCharacterType]
@@ -283,23 +333,43 @@ object Grimoire {
   }
 
   def testTroubleBrewing() = {
-    val grim = new Grimoire(TroubleBrewing, "Audrey", "Claire", "Alexandra" , "Siddharth", "Logan", "Aman", "Christy", "Brandon")
+    val grim = new Grimoire(TroubleBrewing,
+                            "Audrey",
+                            "Claire",
+                            "Alexandra",
+                            "Siddharth",
+                            "Logan",
+                            "Aman",
+                            "Christy",
+                            "Brandon")
     grim.addCharacter("Baron")
     grim.addCharacter("Empath")
-    grim.addCharacter("Ravenkeeper")
-    grim.addCharacter("Drunk")
+    grim.addCharacter("Chef")
+    grim.addCharacter("Recluse")
     grim.addCharacter("Saint")
     grim.addCharacter("Fortune Teller")
-    grim.addCharacter("Washerwoman")
+    grim.addCharacter("Clockmaker")
     println(grim.assignableCharacters)
     println(grim.calculateActual)
     println(grim.checkCharacters)
     println(grim.findMissing)
     grim.pickCharacters()
     println(grim.players)
+    println("Circle Iterator")
+    val iter = grim.getPlayersUnwrapped.circleIterator
+    while (iter.hasNext) {
+      println(iter.next())
+    }
+    println("End circle iterator")
     grim.startNight()
     for (p <- grim.nightIterator) {
       println(p)
     }
+    val chef = grim.getPlayersUnwrapped.getCharacter("Chef").get.asInstanceOf[Chef]
+    chef.getInfo(grim)
+    println(chef.info)
+    val clockmaker = grim.getPlayersUnwrapped.getCharacter("Clockmaker").get.asInstanceOf[Clockmaker]
+    clockmaker.getInfo(grim)
+    println(clockmaker.info)
   }
 }

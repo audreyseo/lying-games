@@ -124,6 +124,7 @@ object Reminders {
   case class IsTheDemon() extends Reminder("Is the Demon")
 
   case class Known() extends Reminder("Known")
+  case class Know() extends Reminder("Know")
 
   sealed abstract class NumberReminder(num: Int) extends Reminder(num.toString)
   case class One() extends NumberReminder(1)
@@ -154,7 +155,7 @@ object Reminders {
   case class FalseInfo() extends Reminder("False Info")
   case object NoExtraEvil extends Reminder("No extra evil")
   case object Safe extends Reminder("Safe")
-
+  case object Second extends Reminder("2nd")
 }
 
 

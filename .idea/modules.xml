@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lying-games.iml" filepath="$PROJECT_DIR$/.idea/modules/lying-games.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/github.lying-games.iml" filepath="$PROJECT_DIR$/.idea/modules/github.lying-games.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lying-games-build.iml" filepath="$PROJECT_DIR$/.idea/modules/lying-games-build.iml" />
     </modules>
   </component>

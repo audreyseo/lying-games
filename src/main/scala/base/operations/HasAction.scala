@@ -8,12 +8,12 @@ trait HasAction {
     action = a
     this
   }
-  def takeAction[A](t: Timeline, as: A*) = {
-    if (!action.isTime(t)) {
-      throw InappropriateTimeException(t, action.permissibleTimes)
-    }
-    action.takeAction[A](as :_*)
-  }
+  //def takeAction[A](t: Timeline, as: A*) = {
+  //  if (!action.isTime(t)) {
+  //    throw InappropriateTimeException(t, action.permissibleTimes)
+  //  }
+  //  action.takeAction[A](as :_*)
+  //}
 }
 
 

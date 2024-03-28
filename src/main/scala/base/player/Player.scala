@@ -35,6 +35,7 @@ abstract class Player(name: String, r: Role) extends HasAlignment {
   }
 
   def isDead: Boolean = status == Dead
+  def isAlive: Boolean = !isDead
 
   def makeAlive(): this.type = {
     this.status = Alive

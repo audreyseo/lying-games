@@ -16,7 +16,7 @@ case class FabledType() extends BotcCharacterType("Fabled") {
     false
 }
 
-sealed abstract class PlayerCharacterType(name: String) extends BotcCharacterType(name) with HasAlignment
+sealed abstract class PlayerCharacterType(name: String) extends BotcCharacterType(name) with HasAlignment with HasAlignedWith
 
 sealed abstract class GoodCharacterType(name: String) extends PlayerCharacterType(name) with HasAlignedWith {
   setAlignment(Good())

@@ -32,6 +32,10 @@ sealed abstract class Once extends Time {
 }
 
 case class OnceAtNight() extends Once with DuringNight
+case object OnceAtNightExceptFirst extends Once with DuringNight
 case class OnceDuringDay() extends Once with DuringDay
 
-
+case object AnyTime extends Time {
+  def isDuringDay = true
+  def isDuringNight = true
+}

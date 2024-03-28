@@ -22,6 +22,7 @@ case class NoEvil() extends BotcModifier
 case class ChangeAlignment(of: HasAlignedWith, to: HasAlignedWith) extends BotcModifier
 
 case class AddCharacter(role: Character) extends BotcModifier
+case class BelievesIsAlignment(alignment: HasAlignedWith) extends BotcModifier
 
 case class AnyOfModifier(mods: BotcModifier*) extends BotcModifier
 case class AllOfModifier(mods: BotcModifier*) extends BotcModifier {
