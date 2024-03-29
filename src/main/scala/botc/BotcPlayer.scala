@@ -8,6 +8,8 @@ import botc.abilities.{Ability, Reminders}
 import botc.characters.PlayerCharacter
 import botc.states._
 
+import org.audreyseo.lying.botc.registration.{Evil, Good, HasMisregistration}
+
 abstract class BotcPlayer(name: String, character: PlayerCharacter) extends Player(name, character) with base.player.Metadata[botc.abilities.Reminder] {
   var drunk: Option[Drunkenness] = None
   var poisoned: Option[Poisoned] = None
@@ -24,7 +26,7 @@ abstract class BotcPlayer(name: String, character: PlayerCharacter) extends Play
   }
 
   override def isDead = {
-    getMetadataOfType[Reminders.Dead].nonEmpty
+    getMetadataOfType[Reminders.Dead].nonEmpty || super.isDead
   }
 
   def isDrunk = {
@@ -138,6 +140,8 @@ abstract class BotcPlayer(name: String, character: PlayerCharacter) extends Play
       case _ => 0
     }
 
+  def isTraveler: Boolean = getRole.isInstanceOf[botc.characters.Townsfolk]
+
   def isTownsfolk: Boolean = getRole.isInstanceOf[botc.characters.Townsfolk]
 
   def isOutsider: Boolean = getRole.isInstanceOf[botc.characters.Outsider]
@@ -146,7 +150,20 @@ abstract class BotcPlayer(name: String, character: PlayerCharacter) extends Play
 
   def isDemon: Boolean = getRole.isInstanceOf[botc.characters.Demon]
 
+  def isGood: Boolean = getPlayerCharacter.getBotcAlignment match {
+    case Good() => true
+    case _ => false
+  }
+
+  def isEvil: Boolean = getPlayerCharacter.getBotcAlignment match {
+    case Evil() => true
+    case _ => false
+  }
+
   def getPlayerCharacter: botc.characters.PlayerCharacter = getRole.asInstanceOf[botc.characters.PlayerCharacter]
+
+  def hasNeighbors: Boolean =
+    hasLeft && hasRight
 
   def getBotcCharacterType: botc.characters.BotcCharacterType = getRole.asInstanceOf[botc.characters.Character].roleType
 

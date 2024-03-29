@@ -42,6 +42,7 @@ trait PassiveAbility extends Ability {
 }
 
 trait TargetableAbility[A] extends Ability {
+  // The maximum number of targets, -1 for infinite
   def numTargets: Int
   var targeted: List[A] = List.empty
   def addTargeted(a: A): this.type = {
@@ -52,6 +53,15 @@ trait TargetableAbility[A] extends Ability {
   def target(a: A, grim: Grimoire): this.type = {
     addWokeOn(grim)
     this
+  }
+}
+
+trait TargetableInfoAbility[T, I] extends TargetableAbility[T] with InfoAbility[I]
+
+trait TargetTwoInfoAbility[T, I] extends TargetableInfoAbility[(T, T), I] {
+
+  def target(t1: T, t2: T, grim: Grimoire): this.type = {
+    target((t1, t2), grim)
   }
 }
 

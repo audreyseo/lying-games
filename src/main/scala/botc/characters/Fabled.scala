@@ -2,8 +2,9 @@ package org.audreyseo.lying
 package botc.characters
 
 import botc.abilities._
-import botc.{AnyOfModifier, Unknown, ModifyOutsiders, NoOpModifier}
+import botc.{AnyOfModifier, ModifyOutsiders, NoOpModifier}
 import base.roles.HasModifier
+import org.audreyseo.lying.botc.registration.Unknown
 
 sealed abstract class Fabled(name: String, description: String) extends Character(name, description) {
   setRoleType(FabledType())

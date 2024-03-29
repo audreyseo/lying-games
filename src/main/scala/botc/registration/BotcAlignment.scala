@@ -1,9 +1,9 @@
 package org.audreyseo.lying
-package botc
+package botc.registration
 
 import base.roles.RoleType
+import base.roles.alignments.{Alignment, HasAlignedWith, HasAlignment}
 import botc.characters.{EvilCharacterType, GoodCharacterType}
-import org.audreyseo.lying.base.roles.alignments.{Alignment, HasAlignedWith, HasAlignment}
 
 sealed abstract class BotcAlignment(name: String) extends Alignment(name) with HasAlignedWith {
   def isGood: Boolean

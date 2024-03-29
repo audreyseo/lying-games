@@ -1,7 +1,7 @@
 package org.audreyseo.lying
 package base
 
-object Configuration {
+trait Configuration {
   var generateAllGameStates : Boolean = true
 
   def setGameStateGeneration(shouldGenerateGameStates: Boolean) : this.type = {

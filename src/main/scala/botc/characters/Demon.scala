@@ -5,6 +5,8 @@ import base.roles.HasModifier
 import botc.abilities._
 import botc._
 
+import org.audreyseo.lying.botc.registration.HasMisregistration
+
 sealed abstract class Demon(name: String, description: String, first:Int =0, other: Int =0) extends EvilCharacter(name, description) with NightOrder {
   setRoleType(DemonType())
   def otherNight = other != 0

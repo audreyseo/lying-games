@@ -1,9 +1,9 @@
 package org.audreyseo.lying
 package botc.characters
 
-import botc.Unknown
 import botc.abilities._
 import botc.NightOrder
+import org.audreyseo.lying.botc.registration.Unknown
 
 sealed abstract class Traveler(name: String, description: String, first: Int = 0, other: Int = 0) extends PlayerCharacter(name, description) with NightOrder {
   setRoleType(TravelerType(Unknown()))

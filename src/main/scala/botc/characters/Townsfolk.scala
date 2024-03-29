@@ -8,6 +8,8 @@ import botc.game.Grimoire
 import botc.players.Players
 import botc._
 
+import org.audreyseo.lying.botc.registration.{Evil, Good}
+
 sealed abstract class Townsfolk(name: String, description: String, first:Int =0, other: Int =0) extends GoodCharacter(name, description) with NightOrder {
   setRoleType(TownsfolkType())
   def otherNight = other != 0
@@ -32,8 +34,9 @@ case class Alchemist() extends Townsfolk("Alchemist", "You have a not-in-play Mi
   }
   def numTargets = 1
 
-  def target(a: Minion, grim: Grimoire): this.type = {
+  override def target(a: Minion, grim: Grimoire): this.type = {
     if (targeted.isEmpty && isTime(grim.getPhase)) {
+      super.target(a, grim)
       if (!grim.inPlay(a) && grim.getScript.hasRole(a.getName)) {
         addTargeted(a)
         assignMinion(a)
@@ -77,8 +80,17 @@ case class BountyHunter() extends AllNightsTownsfolk("Bounty Hunter", "You start
 case class Cannibal() extends Townsfolk("Cannibal", "You have the ability of the recently killed executee. If they are evil, you are poisoned until a good player dies by execution.") with HasReminders.HasDiedToday with HasReminders.HasPoisoned {
   addCharacter(this)
 }
-case class Chambermaid() extends AllNightsTownsfolk("Chambermaid", "Each night, choose 2 alive players (not yourself): you learn how many woke tonight due to their ability.", 51, 70) with TargetableAbility[(BotcPlayer, BotcPlayer)] {
+case class Chambermaid() extends AllNightsTownsfolk("Chambermaid", "Each night, choose 2 alive players (not yourself): you learn how many woke tonight due to their ability.", 51, 70) with TargetableInfoAbility[(BotcPlayer, BotcPlayer), Int] {
   def numTargets = -1
+
+  private def playerCharacterToNumWoke(pc: PlayerCharacter, grim: Grimoire): Int = {
+    pc match {
+      case a: Ability =>
+        if (a.hasWokeOn(grim.getPhase)) 1 else 0
+      case _ => 0
+    }
+  }
+
   override def target(a: (BotcPlayer, BotcPlayer), grim: Grimoire): this.type = {
     super.target(a, grim)
     a match {
@@ -86,8 +98,12 @@ case class Chambermaid() extends AllNightsTownsfolk("Chambermaid", "Each night, 
         val chambermaidPlayer = grim.getPlayersUnwrapped.getPlayer(this)
         chambermaidPlayer match {
           case Some(p) =>
-            if (!p1.equals(p) && !p2.equals(p)) {
-
+            if (!p1.equals(p) && !p2.equals(p) && p1.isAlive && p2.isAlive) {
+              val p1woke = playerCharacterToNumWoke(p1.getPlayerCharacter, grim)
+              val p2woke = playerCharacterToNumWoke(p2.getPlayerCharacter, grim)
+              addInfo(p1woke + p2woke)
+            } else {
+              throw Grimoire.PlayException("The chambermaid cannot pick themselves, and must choose alive players")
             }
         }
     }
@@ -322,21 +338,93 @@ case class Preacher() extends Townsfolk("Preacher", "Each night, choose a player
     this
   }
 }
-case class Professor() extends Townsfolk("Professor", "Once per game, at night*, choose a dead player: if they are a Townsfolk, they are resurrected.", other=43) with HasReminders.HasAlive with HasReminders.HasNoAbility
+case class Professor() extends Townsfolk("Professor", "Once per game, at night*, choose a dead player: if they are a Townsfolk, they are resurrected.", other=43) with HasReminders.HasAlive with HasReminders.HasNoAbility with TargetableAbility[BotcPlayer] {
+
+  def numTargets = 1
+  override def target(a: BotcPlayer, grim: Grimoire): this.type = {
+    if (isTime(grim.getPhase)) {
+      super.target(a, grim)
+      if (a.isTownsfolk && a.isDead) {
+        this.getReminder(Reminders.Alive()) match {
+          case Some(r) =>
+            a.makeAlive().removeMetadata(Reminders.Dead).addMetadata(r)
+          case None => throw Grimoire.PlayException(s"Professor does not have reminder ${Reminders.Alive()}")
+        }
+
+      }
+    }
+
+
+    this
+  }
+}
 case class Ravenkeeper() extends Townsfolk("Ravenkeeper", "If you die at night, you are woken to choose a player: you learn their character.", other=52)
 case class Sage() extends Townsfolk("Sage", "If the Demon kills you, you learn that it is 1 of 2 players.", other=42)
 case class Sailor() extends Townsfolk("Sailor", "Each night, choose an alive player: either you or they are drunk until dusk. You can't die.", first=11, other=4) with HasReminders.HasDrunk
 case class Savant() extends Townsfolk("Savant", "Each day, you may visit the Storyteller to learn 2 things in private: 1 is true & 1 is false.")
 case class Seamstress() extends Townsfolk("Seamstress", "Once per game, at night, choose 2 players (not yourself): you learn if they are the same alignment.", first=43, other=60) with HasReminders.HasNoAbility
 case class Shugenja() extends Townsfolk("Shugenja", "You start knowing if your closest evil player is clockwise or anti-clockwise. If equidistant, this info is arbitrary.")
-case class Slayer() extends Townsfolk("Slayer", "Once per game, during the day, publicly choose a player: if they are the Demon, they die.") with HasReminders.HasNoAbility
+case class Slayer() extends Townsfolk("Slayer", "Once per game, during the day, publicly choose a player: if they are the Demon, they die.") with HasReminders.HasNoAbility with TargetableAbility[BotcPlayer] {
+  def numTargets = 1
+  override def target(a: BotcPlayer, grim: Grimoire): this.type = {
+    if (isTime(grim.getPhase)) {
+      if (a.isDemon) {
+        a.makeDead()
+      }
+    }
+    this
+  }
+}
 case class SnakeCharmer() extends Townsfolk("Snake Charmer", "Each night, choose an alive player: a chosen Demon swaps characters & alignments with you & is then poisoned.", first=20, other=11) with HasReminders.HasPoisoned
 case class Soldier() extends Townsfolk("Soldier", "You are safe from the Demon.")
 case class Steward() extends Townsfolk("Steward", "You start knowing 1 good player.") with HasReminders {
   addReminder(Reminders.Know())
 }
-case class TeaLady() extends Townsfolk("Tea Lady", "If both your alive neighbors are good, they can't die.") with HasReminders {
+case class TeaLady() extends Townsfolk("Tea Lady", "If both your alive neighbors are good, they can't die.") with HasReminders with PassiveAbility {
   addReminder(Reminders.CannotDie())
+
+  private def getTheTeaLadyAndNeighbors(grim: Grimoire): (BotcPlayer, BotcPlayer, BotcPlayer) = {
+    getPlayer(grim) match {
+      case Some(p) =>
+        if (p.hasNeighbors) {
+          val left = p.get_left
+          val right = p.get_right
+          (p, left, right)
+        } else {
+          throw Grimoire.PlayException(s"Player $p is missing one or both of its neighbors")
+        }
+      case None =>
+        throw Grimoire.PlayException(s"No player with character $this was found")
+    }
+  }
+
+  def isCompliant(grim: Grimoire): Boolean = {
+    getTheTeaLadyAndNeighbors(grim) match {
+      case (p, left, right) =>
+        if (left.canRegisterAs(Good()) && right.canRegisterAs(Good())) {
+          left.containsMetadata(Reminders.CannotDie()) && right.containsMetadata(Reminders.CannotDie())
+        } else {
+          true
+        }
+    }
+  }
+
+  private def addCannotDieReminder(neighbor: BotcPlayer):Unit = {
+    if (!neighbor.containsMetadata(Reminders.CannotDie())) {
+      neighbor.addMetadata(this.reminders.head)
+    }
+  }
+
+  override def makeCompliant(grim: Grimoire) = {
+    getTheTeaLadyAndNeighbors(grim) match {
+      case (_, left, right) =>
+        if (left.canRegisterAs(Good()) && right.canRegisterAs(Good())) {
+          addCannotDieReminder(left)
+          addCannotDieReminder(right)
+        }
+    }
+    this
+  }
 }
 case class TownCrier() extends Townsfolk("Town Crier", "Each night*, you learn if a Minion nominated today.", other=58) with HasReminders {
   addReminders(Reminders.MinionNominated(), Reminders.MinionNotNominated())

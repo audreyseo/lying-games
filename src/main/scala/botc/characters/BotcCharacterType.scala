@@ -1,11 +1,12 @@
 package org.audreyseo.lying
 package botc.characters
 
-import botc.{BotcPlayer, Evil, Good}
+import botc.BotcPlayer
 import base.roles.RoleType
 
 import org.audreyseo.lying.base.player.Player
 import org.audreyseo.lying.base.roles.alignments.{Alignment, HasAlignedWith, HasAlignment}
+import org.audreyseo.lying.botc.registration.{Evil, Good}
 
 sealed abstract class BotcCharacterType(name: String) extends RoleType(name) {
 }

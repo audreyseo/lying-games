@@ -2,8 +2,9 @@ package org.audreyseo.lying
 package botc.characters
 
 import base.roles.HasModifier
-import botc.{AnyOfModifier, BelievesIsAlignment, Evil, Good, HasMisregistration, ModifyOutsiders, NightOrder}
+import botc.{AnyOfModifier, BelievesIsAlignment, ModifyOutsiders, NightOrder}
 import botc.abilities._
+import org.audreyseo.lying.botc.registration.{Evil, Good, HasMisregistration}
 
 sealed abstract class Minion(name: String, description: String, first: Int = 0, other: Int = 0) extends EvilCharacter(name, description) with NightOrder {
   setAlignment(Evil())

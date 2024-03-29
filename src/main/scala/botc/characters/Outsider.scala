@@ -2,9 +2,10 @@ package org.audreyseo.lying
 package botc.characters
 
 import botc.abilities._
-import botc.{BelievesIsAlignment, Evil, HasMisregistration, NightOrder}
+import botc.{BelievesIsAlignment, NightOrder}
 
 import org.audreyseo.lying.base.roles.HasModifier
+import org.audreyseo.lying.botc.registration.{Evil, HasMisregistration}
 
 sealed abstract class Outsider(name: String, description: String, first: Int = 0, other: Int = 0) extends GoodCharacter(name, description) with NightOrder {
   setRoleType(OutsiderType())

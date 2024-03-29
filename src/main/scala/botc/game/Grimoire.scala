@@ -284,7 +284,6 @@ class Grimoire(s: Script, p: String*) extends HasAssignableCharacters with GameS
     } else {
       false
     }
-    //if (classTag[A].runtimeClass.isInstanceOf[]
   }
 
   override def lost[A <: RoleType : TypeTag]: Boolean =

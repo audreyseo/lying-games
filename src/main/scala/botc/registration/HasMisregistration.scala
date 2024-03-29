@@ -1,5 +1,5 @@
 package org.audreyseo.lying
-package botc
+package botc.registration
 
 import base.roles.alignments.HasAlignedWith
 import botc.characters.PlayerCharacter

@@ -27,6 +27,19 @@ sealed abstract class Reminder(d: String) {
   }
 
   def getGlobal = isGlobal
+
+  override def equals(obj: Any) = {
+    obj match {
+      case r: Reminder =>
+        r.description.equals(this.description) && ((r.character, this.character) match {
+          case (Some(rc), Some(c)) =>
+            rc.equals(c)
+          case (None, None) => true
+          case (_, _) => false
+        })
+      case _ => false
+    }
+  }
 }
 
 object Reminders {
@@ -167,6 +180,14 @@ trait HasReminders {
       r.setGlobal(f(r))
     }
     this
+  }
+
+  def hasReminder(r: Reminder): Boolean = {
+    reminders.exists(rem => rem.equals(r))
+  }
+
+  def getReminder(r: Reminder): Option[Reminder] = {
+    reminders.find(_.equals(r))
   }
 
   def addReminder(r: Reminder): this.type = {
